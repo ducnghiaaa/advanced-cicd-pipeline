@@ -1,0 +1,9 @@
+.secrets
+.terraform/
+*.tfstate*
+*.tfplan
+*.pem
+backend.hcl
+*.tfvars
+!*.tfvars.example
+ansible/inventory/hosts.ini

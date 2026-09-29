@@ -1,0 +1,16 @@
+---
+java_package: openjdk-21-jre-headless
+timezone: Asia/Ho_Chi_Minh
+
+# Current active Jenkins signing key (see apt error NO_PUBKEY 7198F4B714ABFC68).
+# We fetch it by fingerprint from Ubuntu keyserver, not from pkg.jenkins.io's
+# year-tagged URL that rotates and can point at an expired key.
+jenkins_signing_key_fingerprint: "7198F4B714ABFC68"
+jenkins_signing_key_url: "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x{{ jenkins_signing_key_fingerprint }}&options=mr"
+jenkins_repo_uri: https://pkg.jenkins.io/debian-stable
+jenkins_repo_suites: binary/
+
+docker_signing_key_url: https://download.docker.com/linux/ubuntu/gpg
+docker_repo_uri: https://download.docker.com/linux/ubuntu
+
+awscli_zip_url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
