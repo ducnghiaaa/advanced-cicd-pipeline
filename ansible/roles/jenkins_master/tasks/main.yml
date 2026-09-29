@@ -5,13 +5,21 @@
     state: directory
     mode: '0755'
 
+- name: Download Jenkins signing key
+  ansible.builtin.get_url:
+    url: "{{ jenkins_signing_key_url }}"
+    dest: /etc/apt/keyrings/jenkins.asc
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Add Jenkins LTS apt repository
   ansible.builtin.deb822_repository:
     name: jenkins
     types: deb
     uris: "{{ jenkins_repo_uri }}"
     suites: "{{ jenkins_repo_suites }}"
-    signed_by: "{{ jenkins_signing_key_url }}"
+    signed_by: /etc/apt/keyrings/jenkins.asc
     enabled: true
 
 - name: Install Jenkins
