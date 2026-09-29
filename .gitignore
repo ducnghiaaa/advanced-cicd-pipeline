@@ -6,4 +6,5 @@
 backend.hcl
 *.tfvars
 !*.tfvars.example
-ansible/inventory/hosts.ini.venv*/
+ansible/inventory/hosts.ini
+.venv*/
