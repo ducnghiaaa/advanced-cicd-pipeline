@@ -5,13 +5,29 @@
     state: directory
     mode: '0755'
 
-- name: Download Jenkins signing key
+# Legacy repo files from older Ansible plays / manual attempts.
+# deb822_repository is not fully idempotent when signed_by switches from
+# URL to file path, so remove stale files before letting it (re)write.
+- name: Remove legacy Jenkins repo files if signed_by is still a URL
+  ansible.builtin.shell: |
+    set -e
+    for f in /etc/apt/sources.list.d/jenkins.sources /etc/apt/sources.list.d/jenkins.list; do
+      if [ -f "$f" ] && grep -q 'Signed-By:\s*http' "$f"; then
+        rm -f "$f"
+        echo "removed $f"
+      fi
+    done
+  register: legacy_repo_cleanup
+  changed_when: legacy_repo_cleanup.stdout | length > 0
+
+- name: Download Jenkins signing key (by fingerprint from Ubuntu keyserver)
   ansible.builtin.get_url:
     url: "{{ jenkins_signing_key_url }}"
     dest: /etc/apt/keyrings/jenkins.asc
     owner: root
     group: root
     mode: '0644'
+    force: true
 
 - name: Add Jenkins LTS apt repository
   ansible.builtin.deb822_repository:
