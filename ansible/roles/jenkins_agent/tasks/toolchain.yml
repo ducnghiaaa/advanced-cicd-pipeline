@@ -1,0 +1,81 @@
+---
+# --- Maven ---------------------------------------------------------------
+- name: Install Maven
+  ansible.builtin.apt:
+    name: maven
+    state: present
+
+# --- Docker --------------------------------------------------------------
+- name: Ensure /etc/apt/keyrings exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Docker apt repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: "{{ docker_repo_uri }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    signed_by: "{{ docker_signing_key_url }}"
+    enabled: true
+
+- name: Install Docker Engine and plugins
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+    state: present
+    update_cache: true
+
+- name: Configure Docker daemon log rotation
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "10m",
+          "max-file": "3"
+        }
+      }
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart docker
+
+- name: Ensure Docker service is started and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add jenkins user to docker group
+  ansible.builtin.user:
+    name: jenkins
+    groups: docker
+    append: true
+
+# --- AWS CLI v2 ----------------------------------------------------------
+- name: Download AWS CLI v2 installer
+  ansible.builtin.get_url:
+    url: "{{ awscli_zip_url }}"
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+  register: awscli_zip
+
+- name: Extract AWS CLI v2 installer
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp/
+    remote_src: true
+  when: awscli_zip.changed
+
+- name: Install AWS CLI v2 (idempotent via creates)
+  ansible.builtin.command: /tmp/aws/install
+  args:
+    creates: /usr/local/bin/aws

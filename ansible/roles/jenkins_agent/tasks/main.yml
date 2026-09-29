@@ -1,0 +1,6 @@
+---
+- name: Agent user and SSH access
+  ansible.builtin.import_tasks: user.yml
+
+- name: Build toolchain
+  ansible.builtin.import_tasks: toolchain.yml

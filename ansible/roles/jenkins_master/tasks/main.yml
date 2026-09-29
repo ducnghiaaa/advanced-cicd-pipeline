@@ -1,0 +1,64 @@
+---
+- name: Ensure /etc/apt/keyrings exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Jenkins LTS apt repository
+  ansible.builtin.deb822_repository:
+    name: jenkins
+    types: deb
+    uris: "{{ jenkins_repo_uri }}"
+    suites: "{{ jenkins_repo_suites }}"
+    signed_by: "{{ jenkins_signing_key_url }}"
+    enabled: true
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+    state: present
+    update_cache: true
+
+- name: Ensure Jenkins service is started and enabled
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+
+- name: Ensure /var/lib/jenkins/.ssh directory
+  ansible.builtin.file:
+    path: /var/lib/jenkins/.ssh
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0700'
+
+- name: Generate Jenkins master SSH keypair (ed25519)
+  community.crypto.openssh_keypair:
+    path: /var/lib/jenkins/.ssh/id_ed25519
+    type: ed25519
+    owner: jenkins
+    group: jenkins
+    mode: '0600'
+
+- name: Wait for Jenkins to accept connections on port 8080
+  ansible.builtin.wait_for:
+    port: 8080
+    timeout: 300
+
+- name: Check whether the initial admin password file still exists
+  ansible.builtin.stat:
+    path: /var/lib/jenkins/secrets/initialAdminPassword
+  register: initial_admin_password_file
+
+- name: Read initial admin password
+  ansible.builtin.slurp:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+  register: initial_admin_password
+  when: initial_admin_password_file.stat.exists
+
+- name: Print initial admin password
+  ansible.builtin.debug:
+    msg: "Initial admin password: {{ initial_admin_password.content | b64decode | trim }}"
+  when: initial_admin_password_file.stat.exists

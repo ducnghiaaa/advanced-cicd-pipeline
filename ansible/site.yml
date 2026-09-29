@@ -1,0 +1,18 @@
+---
+- name: Common baseline for master and agent
+  hosts: jenkins_master:jenkins_agent
+  become: true
+  roles:
+    - common
+
+- name: Configure Jenkins master
+  hosts: jenkins_master
+  become: true
+  roles:
+    - jenkins_master
+
+- name: Configure Jenkins agent
+  hosts: jenkins_agent
+  become: true
+  roles:
+    - jenkins_agent

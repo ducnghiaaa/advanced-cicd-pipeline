@@ -1,0 +1,24 @@
+---
+- name: Update apt cache (allow up to 1h stale)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base OS packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - curl
+      - unzip
+      - ca-certificates
+      - unattended-upgrades
+    state: present
+
+- name: Install Java runtime
+  ansible.builtin.apt:
+    name: "{{ java_package }}"
+    state: present
+
+- name: Set system timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
