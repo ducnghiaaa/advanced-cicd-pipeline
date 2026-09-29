@@ -2,6 +2,6 @@
 
 # Architecture
 
-![alt text](images/architecture.svg)
+![alt text](images/architecture.png)
 
 # CICD Workflow
