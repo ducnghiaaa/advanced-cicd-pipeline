@@ -1,0 +1,9 @@
+# Copy to terraform.tfvars (gitignored) and fill in real values.
+# Get your public IP:   curl -s https://checkip.amazonaws.com
+# Read your SSH key:    cat ~/.ssh/id_ed25519.pub
+
+admin_cidrs = [
+  "1.2.3.4/32", # your workstation's public IP, /32
+]
+
+ssh_public_key = "ssh-ed25519 AAAA...replace-me... you@host"

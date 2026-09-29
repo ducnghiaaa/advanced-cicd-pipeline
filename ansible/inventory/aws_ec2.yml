@@ -1,0 +1,24 @@
+---
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - ap-southeast-1
+
+filters:
+  tag:Project: advanced-cicd
+  instance-state-name: running
+
+# Reach hosts via their private IP - controller is inside the same VPC.
+hostnames:
+  - private-ip-address
+
+compose:
+  ansible_host: private_ip_address
+  ansible_user: "'ubuntu'"
+
+# Build groups from the Role tag: values become group names directly
+# (jenkins_master, jenkins_agent, ansible_controller).
+keyed_groups:
+  - key: tags.Role
+    prefix: ""
+    separator: ""

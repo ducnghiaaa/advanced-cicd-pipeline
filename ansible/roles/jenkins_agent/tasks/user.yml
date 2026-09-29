@@ -1,0 +1,29 @@
+---
+- name: Create jenkins user on agent
+  ansible.builtin.user:
+    name: jenkins
+    shell: /bin/bash
+    home: /home/jenkins
+    create_home: true
+    state: present
+
+- name: Ensure agent workspace directory
+  ansible.builtin.file:
+    path: /home/jenkins/agent
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0750'
+
+- name: Read Jenkins master public key
+  ansible.builtin.slurp:
+    src: /var/lib/jenkins/.ssh/id_ed25519.pub
+  delegate_to: "{{ groups['jenkins_master'][0] }}"
+  register: master_pubkey
+
+- name: Authorize master to SSH into agent as jenkins user
+  ansible.posix.authorized_key:
+    user: jenkins
+    key: "{{ master_pubkey.content | b64decode | trim }}"
+    key_options: 'from="{{ groups[''jenkins_master''][0] }}"'
+    state: present

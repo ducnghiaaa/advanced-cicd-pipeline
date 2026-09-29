@@ -1,0 +1,88 @@
+---
+- name: Ensure /etc/apt/keyrings exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+# Legacy repo files from older Ansible plays / manual attempts.
+# deb822_repository is not fully idempotent when signed_by switches from
+# URL to file path, so remove stale files before letting it (re)write.
+- name: Remove legacy Jenkins repo files if signed_by is still a URL
+  ansible.builtin.shell: |
+    set -e
+    for f in /etc/apt/sources.list.d/jenkins.sources /etc/apt/sources.list.d/jenkins.list; do
+      if [ -f "$f" ] && grep -q 'Signed-By:\s*http' "$f"; then
+        rm -f "$f"
+        echo "removed $f"
+      fi
+    done
+  register: legacy_repo_cleanup
+  changed_when: legacy_repo_cleanup.stdout | length > 0
+
+- name: Download Jenkins signing key (by fingerprint from Ubuntu keyserver)
+  ansible.builtin.get_url:
+    url: "{{ jenkins_signing_key_url }}"
+    dest: /etc/apt/keyrings/jenkins.asc
+    owner: root
+    group: root
+    mode: '0644'
+    force: true
+
+- name: Add Jenkins LTS apt repository
+  ansible.builtin.deb822_repository:
+    name: jenkins
+    types: deb
+    uris: "{{ jenkins_repo_uri }}"
+    suites: "{{ jenkins_repo_suites }}"
+    signed_by: /etc/apt/keyrings/jenkins.asc
+    enabled: true
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+    state: present
+    update_cache: true
+
+- name: Ensure Jenkins service is started and enabled
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+
+- name: Ensure /var/lib/jenkins/.ssh directory
+  ansible.builtin.file:
+    path: /var/lib/jenkins/.ssh
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: '0700'
+
+- name: Generate Jenkins master SSH keypair (ed25519)
+  community.crypto.openssh_keypair:
+    path: /var/lib/jenkins/.ssh/id_ed25519
+    type: ed25519
+    owner: jenkins
+    group: jenkins
+    mode: '0600'
+
+- name: Wait for Jenkins to accept connections on port 8080
+  ansible.builtin.wait_for:
+    port: 8080
+    timeout: 300
+
+- name: Check whether the initial admin password file still exists
+  ansible.builtin.stat:
+    path: /var/lib/jenkins/secrets/initialAdminPassword
+  register: initial_admin_password_file
+
+- name: Read initial admin password
+  ansible.builtin.slurp:
+    src: /var/lib/jenkins/secrets/initialAdminPassword
+  register: initial_admin_password
+  when: initial_admin_password_file.stat.exists
+
+- name: Print initial admin password
+  ansible.builtin.debug:
+    msg: "Initial admin password: {{ initial_admin_password.content | b64decode | trim }}"
+  when: initial_admin_password_file.stat.exists
