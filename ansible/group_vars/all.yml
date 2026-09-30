@@ -16,7 +16,7 @@ docker_repo_uri: https://download.docker.com/linux/ubuntu
 awscli_zip_url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
 
 # Trivy - pin apt package version
-trivy_version: "0.60.0"
+trivy_version: "0.71.2"
 trivy_signing_key_url: https://aquasecurity.github.io/trivy-repo/deb/public.key
 trivy_repo_uri: https://aquasecurity.github.io/trivy-repo/deb
 
