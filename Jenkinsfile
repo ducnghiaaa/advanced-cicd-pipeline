@@ -15,9 +15,10 @@ pipeline {
   stages {
     stage('Secret scan') {
       steps {
-        // TruffleHog runs on the entire git history of the checkout;
-        // --only-verified drops false positives; --fail exits non-zero.
-        sh 'trufflehog git file://. --only-verified --fail'
+        // TruffleHog on the entire git history of the checkout.
+        // --only-verified drops false positives, --fail exits non-zero,
+        // --no-update disables auto-upgrade (binary is root-owned, jenkins can't write).
+        sh 'trufflehog --no-update git file://. --only-verified --fail'
       }
     }
 
