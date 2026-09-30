@@ -2,21 +2,32 @@ pipeline {
   agent { label 'maven' }
 
   options {
-    timeout(time: 10, unit: 'MINUTES')
+    timeout(time: 30, unit: 'MINUTES')
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
 
   stages {
-    stage('Toolchain check') {
+    stage('Build & Unit Test') {
       steps {
-        sh '''
-          set -eu
-          java -version
-          mvn -v
-          docker version --format '{{.Server.Version}}'
-          aws sts get-caller-identity --query Arn --output text
-        '''
+        dir('app') {
+          sh 'mvn -B clean verify'
+        }
+      }
+      post {
+        always {
+          junit 'app/target/surefire-reports/*.xml'
+        }
+      }
+    }
+
+    stage('SonarCloud Analysis + Quality Gate') {
+      steps {
+        dir('app') {
+          withSonarQubeEnv('sonarcloud') {
+            sh 'mvn -B sonar:sonar -Dsonar.qualitygate.wait=true'
+          }
+        }
       }
     }
   }

@@ -17,7 +17,13 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		 <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+		<maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+
+		<!-- SonarCloud -->
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.organization>ducnghiaaa</sonar.organization>
+		<sonar.projectKey>ducnghiaaa_advanced-cicd-pipeline</sonar.projectKey>
+		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 
 	<dependencies>
@@ -90,6 +96,12 @@
 				<configuration>
 					<argLine>${argLine} -Xmx2048m</argLine>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>4.0.0.4121</version>
 			</plugin>
 
 			<plugin>
