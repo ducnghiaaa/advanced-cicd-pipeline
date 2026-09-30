@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-app
+  namespace: sample-app
+  labels:
+    app.kubernetes.io/name: sample-app
+  annotations:
+    # NLB (external, IP mode) - cheaper + faster than a Classic LB, works out
+    # of the box with the in-tree cloud provider on modern EKS versions.
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: sample-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
