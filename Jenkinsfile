@@ -8,8 +8,11 @@ pipeline {
   }
 
   environment {
-    AWS_REGION = 'ap-southeast-1'
-    ECR_REPO   = 'p06/sample-app'
+    AWS_REGION     = 'ap-southeast-1'
+    ECR_REPO       = 'p06/sample-app'
+    EKS_CLUSTER    = 'p06-eks'
+    K8S_NAMESPACE  = 'sample-app'
+    K8S_DEPLOYMENT = 'sample-app'
   }
 
   stages {
@@ -120,6 +123,43 @@ pipeline {
 
           docker tag  "${LOCAL_IMAGE}"  "${REMOTE_IMAGE}"
           docker push "${REMOTE_IMAGE}"
+        '''
+      }
+    }
+
+    stage('Deploy to EKS') {
+      // Only main branch reaches production - feature branches stop after
+      // publishing the image, so PRs never touch the cluster.
+      when { branch 'main' }
+
+      // Serialize deploys across builds of the same job to avoid two
+      // rollouts fighting over the same Deployment object.
+      options {
+        lock resource: 'eks-deploy'
+      }
+
+      steps {
+        sh '''
+          set -eu
+
+          aws eks update-kubeconfig \
+            --region "${AWS_REGION}" \
+            --name   "${EKS_CLUSTER}"
+
+          # Namespace + Service are idempotent, apply them every build so a
+          # fresh cluster is bootstrapped by the first successful pipeline.
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/service.yaml
+
+          # Substitute the just-pushed image into the Deployment manifest.
+          # Render into the Jenkins workspace tmp dir - never write back into
+          # the source tree, which is a checked-out git repo.
+          rendered="${WORKSPACE_TMP}/deployment.rendered.yaml"
+          sed "s|IMAGE_PLACEHOLDER|${REMOTE_IMAGE}|g" k8s/deployment.yaml > "${rendered}"
+          kubectl apply -f "${rendered}"
+
+          kubectl -n "${K8S_NAMESPACE}" rollout status \
+            deployment/"${K8S_DEPLOYMENT}" --timeout=5m
         '''
       }
     }
