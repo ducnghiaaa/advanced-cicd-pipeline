@@ -33,3 +33,20 @@ module "vpc" {
     "kubernetes.io/role/internal-elb" = "1"
   }
 }
+
+# ---------------------------------------------------------------------------
+# S3 Gateway endpoint - free, keeps ECR image layer pulls (stored in S3) off
+# the NAT gateway. Attached to private subnet route tables so private-subnet
+# workloads (EKS worker nodes) reach S3 without traversing NAT.
+# ---------------------------------------------------------------------------
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id            = module.vpc.vpc_id
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = module.vpc.private_route_table_ids
+
+  tags = {
+    Name = "p06-vpce-s3"
+  }
+}
