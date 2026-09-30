@@ -14,3 +14,12 @@ docker_signing_key_url: https://download.docker.com/linux/ubuntu/gpg
 docker_repo_uri: https://download.docker.com/linux/ubuntu
 
 awscli_zip_url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+
+# Trivy - pin apt package version
+trivy_version: "0.60.0"
+trivy_signing_key_url: https://aquasecurity.github.io/trivy-repo/deb/public.key
+trivy_repo_uri: https://aquasecurity.github.io/trivy-repo/deb
+
+# TruffleHog - binary release from GitHub; checksum verified from the same release
+trufflehog_version: "3.90.5"
+trufflehog_release_base: "https://github.com/trufflesecurity/trufflehog/releases/download"
