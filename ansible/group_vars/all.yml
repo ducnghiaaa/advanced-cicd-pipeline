@@ -23,3 +23,9 @@ trivy_repo_uri: https://aquasecurity.github.io/trivy-repo/deb
 # TruffleHog - binary release from GitHub; checksum verified from the same release
 trufflehog_version: "3.90.5"
 trufflehog_release_base: "https://github.com/trufflesecurity/trufflehog/releases/download"
+
+# kubectl - keep in the same minor as the EKS control plane (see
+# infra/stacks/eks/variables.tf cluster_version). Skew of +/- 1 minor is
+# supported by K8s; keeping them equal avoids surprises.
+kubectl_version: "1.31.4"
+kubectl_release_base: "https://dl.k8s.io/release"
