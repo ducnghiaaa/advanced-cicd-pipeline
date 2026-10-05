@@ -1,0 +1,32 @@
+# Version control
+.git
+.gitignore
+
+# Source and tests - not needed at runtime (jar is prebuilt)
+src/
+pom.xml
+mvnw
+mvnw.cmd
+.mvn/
+
+# Build metadata that would bust the layer cache
+target/site/
+target/surefire-reports/
+target/generated-sources/
+target/generated-test-sources/
+target/maven-*/
+target/classes/
+target/test-classes/
+
+# IDE + OS junk
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Secrets, envs
+.env
+.secrets/
+*.pem
+*.key

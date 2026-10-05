@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+
+state_bucket = "p06-tfstate-824843842986"
+
+# Tighten in production; open CIDR is only acceptable in a lab because IAM
+# still gates the API. Prefer your office / VPN CIDR when possible.
+# public_access_cidrs = ["<your.ip.address>/32"]

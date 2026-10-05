@@ -87,3 +87,56 @@
   ansible.builtin.command: /tmp/aws/install
   args:
     creates: /usr/local/bin/aws
+
+# --- Trivy ---------------------------------------------------------------
+- name: Download Trivy signing key
+  ansible.builtin.get_url:
+    url: "{{ trivy_signing_key_url }}"
+    dest: /etc/apt/keyrings/trivy.asc
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Add Trivy apt repository
+  ansible.builtin.deb822_repository:
+    name: trivy
+    types: deb
+    uris: "{{ trivy_repo_uri }}"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: /etc/apt/keyrings/trivy.asc
+    enabled: true
+
+- name: Install Trivy (pinned)
+  ansible.builtin.apt:
+    name: "trivy={{ trivy_version }}"
+    state: present
+    update_cache: true
+    allow_downgrade: true
+
+# --- TruffleHog ---------------------------------------------------------
+# Binary release with checksum verified from the same GitHub release.
+- name: Download TruffleHog release archive (checksum verified)
+  ansible.builtin.get_url:
+    url: "{{ trufflehog_release_base }}/v{{ trufflehog_version }}/trufflehog_{{ trufflehog_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/trufflehog_{{ trufflehog_version }}.tar.gz"
+    checksum: "sha256:{{ trufflehog_release_base }}/v{{ trufflehog_version }}/trufflehog_{{ trufflehog_version }}_checksums.txt"
+    mode: '0644'
+
+- name: Install TruffleHog binary
+  ansible.builtin.unarchive:
+    src: "/tmp/trufflehog_{{ trufflehog_version }}.tar.gz"
+    dest: /usr/local/bin
+    include:
+      - trufflehog
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: true
+    creates: /usr/local/bin/trufflehog
+
+- name: Verify TruffleHog version matches pin
+  ansible.builtin.command: /usr/local/bin/trufflehog --version
+  register: trufflehog_version_check
+  changed_when: false
+  failed_when: trufflehog_version not in trufflehog_version_check.stderr + trufflehog_version_check.stdout

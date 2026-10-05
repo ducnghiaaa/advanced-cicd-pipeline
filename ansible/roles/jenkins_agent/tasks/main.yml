@@ -4,3 +4,6 @@
 
 - name: Build toolchain
   ansible.builtin.import_tasks: toolchain.yml
+
+- name: kubectl for EKS deploys
+  ansible.builtin.import_tasks: kubectl.yml

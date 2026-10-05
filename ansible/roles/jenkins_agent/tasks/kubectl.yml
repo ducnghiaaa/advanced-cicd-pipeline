@@ -1,0 +1,17 @@
+---
+# kubectl - binary from dl.k8s.io, checksum verified against the .sha256 file
+# published at the same path (the canonical distribution channel, not GitHub).
+- name: Download kubectl binary
+  ansible.builtin.get_url:
+    url: "{{ kubectl_release_base }}/v{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: "/usr/local/bin/kubectl"
+    checksum: "sha256:{{ kubectl_release_base }}/v{{ kubectl_version }}/bin/linux/amd64/kubectl.sha256"
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Verify kubectl version matches pin
+  ansible.builtin.command: /usr/local/bin/kubectl version --client=true -o yaml
+  register: kubectl_version_check
+  changed_when: false
+  failed_when: kubectl_version not in kubectl_version_check.stdout
