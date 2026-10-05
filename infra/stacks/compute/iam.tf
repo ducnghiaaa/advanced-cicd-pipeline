@@ -92,6 +92,7 @@ data "aws_iam_policy_document" "agent_ecr" {
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
       "ecr:BatchGetImage",
+      "ecr:DescribeImages",
     ]
 
     resources = [data.aws_ecr_repository.sample_app.arn]
