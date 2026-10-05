@@ -28,7 +28,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 8000
           # Spring Boot 2.2 has no /actuator by default; we probe the root
           # path, which the sample controller answers with 200 OK.
           readinessProbe:
