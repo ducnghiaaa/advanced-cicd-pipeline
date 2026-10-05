@@ -21,9 +21,18 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   addons = {
-    coredns    = {}
-    kube-proxy = {}
-    vpc-cni    = {}
+    # CNI + kube-proxy MUST be installed before Terraform waits for nodes
+    # to be Ready. Without them a node has no pod networking and sits in
+    # NotReady forever, which blocks the aws_eks_node_group create wait
+    # and deadlocks the whole apply.
+    vpc-cni = {
+      before_compute = true
+    }
+    kube-proxy = {
+      before_compute = true
+    }
+    # CoreDNS runs ON a node, so it must wait for nodes to be Ready first.
+    coredns = {}
   }
 
   # v21 removed `eks_managed_node_group_defaults`; inline per-group.
